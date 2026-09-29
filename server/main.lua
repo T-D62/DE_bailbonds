@@ -26,13 +26,15 @@ local function canUsePoliceCommand(source)
         return nil
     end
 
-    for _, jobName in ipairs(Config.PoliceJobs or {}) do
-        if xPlayer.job.name == jobName then
+    for key, value in pairs(Config.PoliceJobs or {}) do
+        local jobName = type(key) == 'number' and value or key
+        local minimumGrade = type(key) == 'number' and 0 or (tonumber(value) or 0)
+        if xPlayer.job.name == jobName and (tonumber(xPlayer.job.grade) or 0) >= minimumGrade then
             return xPlayer
         end
     end
 
-    notify(source, 'error', 'You are not authorized to use this command.')
+    notify(source, 'error', 'You are not authorized to use this command or your police grade is too low.')
     return nil
 end
 

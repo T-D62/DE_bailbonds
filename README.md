@@ -18,7 +18,7 @@ A bail bond resource for FiveM servers running ESX, ox_lib, oxmysql, ox_target, 
 2. For a new installation, import [`bailbonds.sql`](bailbonds.sql) into the server database.
 3. For an existing installation, apply the one-time migration below before restarting the resource. Existing bonds remain in the table; old rows keep a `NULL` identifier and are matched by character name until paid or removed.
 4. Review the settings in `config.lua`, especially `PoliceJobs`, `PayAccount`, and `SocietyAccount` (defaults to `society_police`).
-5. Ensure the dependencies start before this resource, then add `ensure DE_bailbonds` to `server.cfg`.
+5. Ensure ESX and the selected police job resource start before this resource, then add `ensure DE_bailbonds` to `server.cfg`.
 
 ### Existing database migration
 
@@ -52,7 +52,7 @@ Existing paid rows retain a `NULL` `paid_at`, because their payment time is unkn
 | `Config.Interest.Rate` | Interest rate per accrual period, expressed as a decimal (for example, `0.05` for 5%). |
 | `Config.Interest.PeriodDays` | Number of days in an accrual period. |
 | `Config.Ped` / `Config.PedCoords` | NPC model and location. |
-| `Config.PoliceJobs` | ESX job names allowed to use officer commands. |
+| `Config.PoliceJobs` | ESX/p_policejob job names mapped to the minimum grade allowed to use officer commands. |
 
 The included interest helpers are available as `BailBonds.CalculateAccruedAmount(principal, rate, periods)` and `BailBonds.GetAccrualPeriods(createdAtUnix, periodDays, nowUnix)`. Interest is not automatically added to a bond or payment; the default behavior preserves the entered bond amount.
 
@@ -66,6 +66,12 @@ The included interest helpers are available as `BailBonds.CalculateAccruedAmount
 | `/bondstatus` | Any player | Show your own unpaid bond count and total. |
 
 Officers receive confirmation or validation errors in-game. Set, status-check, removal, payment, and database failure events are also written to the server console with officer/player identifiers.
+
+### p_policejob (ESX)
+
+The resource works with p_policejob when it is configured to use the ESX framework. Officer permissions use ESX's `xPlayer.job.name` and `xPlayer.job.grade`, so configure `Config.PoliceJobs` with the same job names and minimum grades used by p_policejob. For example, add `sheriff = 0` to allow every sheriff grade, or set `sheriff = 2` to restrict bond commands to grade 2 and above. The previous array form (for example, `{ 'police' }`) remains supported and allows every grade for each listed job.
+
+Start `es_extended` and p_policejob before `DE_bailbonds`. This resource does not call private p_policejob exports; it uses ESX job data and the shared ESX police society account configured by `Config.SocietyAccount`.
 
 ## Player payments
 
