@@ -2,6 +2,11 @@ local ped = nil
 
 local lastDebtNotice
 
+local function notify(kind, title, description, duration)
+    local notificationType = kind == "inform" and "info" or kind
+    TriggerEvent('okokNotify:Alert', title, description, duration or 5000, notificationType)
+end
+
 local function notifyUnpaidBonds()
     local now = GetGameTimer()
     if lastDebtNotice and now - lastDebtNotice < 10000 then
@@ -19,12 +24,12 @@ local function notifyUnpaidBonds()
         end
 
         if count > 0 then
-            lib.notify({
-                type = "warning",
-                title = "Unpaid bond",
-                description = ("You have %d unpaid bond(s), totaling $%d. Visit the bail bonds office or use /bondstatus."):format(count, total),
-                duration = 10000,
-            })
+            notify(
+                "warning",
+                "Unpaid bond",
+                ("You have %d unpaid bond(s), totaling $%d. Visit the bail bonds office or use /bondstatus."):format(count, total),
+                10000
+            )
         end
     end)
 end

@@ -73,13 +73,16 @@ local function displayBondStatus()
             end
         end
 
-        lib.notify({
-            type = count > 0 and 'warning' or 'inform',
-            title = 'Bond status',
-            description = count > 0
-                and ('You have %d unpaid bond(s), totaling $%d.'):format(count, total)
-                or 'You have no unpaid bonds.',
-        })
+        local description = count > 0
+            and ('You have %d unpaid bond(s), totaling $%d.'):format(count, total)
+            or 'You have no unpaid bonds.'
+        TriggerEvent(
+            'okokNotify:Alert',
+            'Bond status',
+            description,
+            5000,
+            count > 0 and 'warning' or 'info'
+        )
     end)
 end
 

@@ -1,6 +1,6 @@
 # DE_bailbonds
 
-A bail bond resource for FiveM servers running ESX, ox_lib, oxmysql, ox_target, and esx_addonaccount. It provides a nearby bail-bonds NPC, officer bond management, player bond status, and server-validated payments to the configured police society account.
+A bail bond resource for FiveM servers running ESX, ox_lib, oxmysql, ox_target, esx_addonaccount, and okokNotify. It provides a nearby bail-bonds NPC, officer bond management, player bond status, and server-validated payments to the configured police society account.
 
 ## Requirements
 
@@ -9,6 +9,7 @@ A bail bond resource for FiveM servers running ESX, ox_lib, oxmysql, ox_target, 
 - `oxmysql`
 - `ox_target`
 - `esx_addonaccount` with the configured society account
+- `okokNotify`
 - The `ReaperV4` resource referenced by this resource's `fxmanifest.lua`
 
 ## Installation
@@ -16,7 +17,7 @@ A bail bond resource for FiveM servers running ESX, ox_lib, oxmysql, ox_target, 
 1. Place `DE_bailbonds` in your server resources.
 2. For a new installation, import [`bailbonds.sql`](bailbonds.sql) into the server database.
 3. For an existing installation, apply the one-time migration below before restarting the resource. Existing bonds remain in the table; old rows keep a `NULL` identifier and are matched by character name until paid or removed.
-4. Review the settings in `config.lua`, especially `PoliceJobs`, `PayAccount`, and `SocietyAccount`.
+4. Review the settings in `config.lua`, especially `PoliceJobs`, `PayAccount`, and `SocietyAccount` (defaults to `society_police`).
 5. Ensure the dependencies start before this resource, then add `ensure DE_bailbonds` to `server.cfg`.
 
 ### Existing database migration
@@ -68,7 +69,7 @@ Officers receive confirmation or validation errors in-game. Set, status-check, r
 
 ## Player payments
 
-Players can interact with the bail-bonds NPC to open the NUI dashboard, which lists unpaid bonds across the server so a player can pay a bond for someone else, shows the current player's paid history, and confirms payments. Unpaid debts are notified after spawn and reminded at the configured interval; `/bondstatus` remains available. The server looks up the selected unpaid bond by its database ID; client-supplied prices and names are never used to charge money.
+Players can interact with the bail-bonds NPC to open the NUI dashboard, which lists unpaid bonds across the server so a player can pay a bond for someone else, shows the current player's paid history, and confirms payments. Notifications use `okokNotify`. Unpaid debts are notified after spawn and reminded at the configured interval; `/bondstatus` remains available. The server looks up the selected unpaid bond by its database ID, charges the payer, and credits the configured shared police society account; if that account is unavailable, the payment is not taken. Client-supplied prices and names are never used to charge money.
 
 ## Database tracking
 

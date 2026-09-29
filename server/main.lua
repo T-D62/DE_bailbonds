@@ -2,12 +2,12 @@ local commandCooldowns = {}
 local paymentsInProgress = {}
 
 local function notify(source, kind, description)
-    TriggerClientEvent('ox_lib:notify', source, {
-        type = kind,
-        title = 'Bond',
-        icon = 'fas fa-handcuffs',
-        description = description,
-    })
+    local notificationType = kind
+    if kind == 'inform' then
+        notificationType = 'info'
+    end
+
+    TriggerClientEvent('okokNotify:Alert', source, 'Bond', description, 5000, notificationType)
 end
 
 local function logAction(action, officer, target, details)
@@ -285,6 +285,14 @@ RegisterNetEvent('DE_bailbonds:payBond', function(bondId)
     paymentsInProgress[id] = true
 
     local ok, result = pcall(function()
+        local societyAccount
+        TriggerEvent('esx_addonaccount:getSharedAccount', Config.SocietyAccount, function(account)
+            societyAccount = account
+        end)
+        if not societyAccount then
+            return 'society_unavailable'
+        end
+
         local bond = MySQL.single.await(
             'SELECT `id`, `name`, `price`, `paid` FROM `user_bailbonds` WHERE `id` = ? AND `paid` = 0 LIMIT 1',
             { id }
@@ -308,13 +316,7 @@ RegisterNetEvent('DE_bailbonds:payBond', function(bondId)
         end
 
         removeAccountMoney(xPlayer, price)
-        TriggerEvent('esx_addonaccount:getSharedAccount', Config.SocietyAccount, function(account)
-            if account then
-                account.addMoney(price)
-            else
-                print(('[DE_bailbonds] Society account %s is unavailable for bond %s'):format(Config.SocietyAccount, id))
-            end
-        end)
+        societyAccount.addMoney(price)
         logAction('paid', xPlayer.identifier, bond.name, ('bond_id=%s amount=%d'):format(id, price))
         return ('paid:%s:%d'):format(bond.name, price)
     end)
@@ -330,6 +332,10 @@ RegisterNetEvent('DE_bailbonds:payBond', function(bondId)
     elseif result == 'insufficient' then
         notify(source, 'error', 'You do not have enough money to pay this bond.')
         TriggerClientEvent('DE_bailbonds:paymentResult', source, 'insufficient')
+    elseif result == 'society_unavailable' then
+        notify(source, 'error', ('The police society account (%s) is unavailable. Payment was not taken.'):format(Config.SocietyAccount))
+        print(('[DE_bailbonds] Society account %s is unavailable for bond %s'):format(Config.SocietyAccount, id))
+        TriggerClientEvent('DE_bailbonds:paymentResult', source, 'failure')
     else
         local name, price = result:match('^paid:(.*):(%d+)$')
         notify(source, 'success', ('You paid %s’s bond of $%s.'):format(name or 'the player', price or '0'))
