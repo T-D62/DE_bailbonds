@@ -244,6 +244,29 @@ ESX.RegisterServerCallback('DE_bailbonds:getBonds', function(source, callback)
     callback(bonds)
 end)
 
+ESX.RegisterServerCallback('DE_bailbonds:getMenuBonds', function(source, callback)
+    local xPlayer = ESX.GetPlayerFromId(source)
+    if not xPlayer then
+        callback({})
+        return
+    end
+
+    local ownerCondition, parameters = getOwnerCondition(xPlayer)
+    local ok, bonds = pcall(function()
+        return MySQL.query.await(
+            ('SELECT `id`, `name`, `price`, `paid`, `created_at`, `paid_at` FROM `user_bailbonds` WHERE `paid` = 0 OR %s ORDER BY `created_at` DESC'):format(ownerCondition),
+            parameters
+        )
+    end)
+    if not ok then
+        print(('[DE_bailbonds] Failed to load payable bonds for %s: %s'):format(xPlayer.identifier, tostring(bonds)))
+        callback({})
+        return
+    end
+
+    callback(bonds or {})
+end)
+
 RegisterNetEvent('DE_bailbonds:payBond', function(bondId)
     local source = source
     local xPlayer = ESX.GetPlayerFromId(source)
@@ -262,11 +285,9 @@ RegisterNetEvent('DE_bailbonds:payBond', function(bondId)
     paymentsInProgress[id] = true
 
     local ok, result = pcall(function()
-        local ownerCondition, parameters = getOwnerCondition(xPlayer)
-        table.insert(parameters, 1, id)
         local bond = MySQL.single.await(
-            ('SELECT `id`, `name`, `price`, `paid` FROM `user_bailbonds` WHERE `id` = ? AND %s LIMIT 1'):format(ownerCondition),
-            parameters
+            'SELECT `id`, `name`, `price`, `paid` FROM `user_bailbonds` WHERE `id` = ? AND `paid` = 0 LIMIT 1',
+            { id }
         )
 
         if not bond or tonumber(bond.paid) == 1 then
@@ -278,13 +299,9 @@ RegisterNetEvent('DE_bailbonds:payBond', function(bondId)
             return 'insufficient'
         end
 
-        local updateParameters = { id }
-        for _, parameter in ipairs(parameters) do
-            table.insert(updateParameters, parameter)
-        end
         local updated = MySQL.update.await(
-            ('UPDATE `user_bailbonds` SET `paid` = 1, `paid_at` = CURRENT_TIMESTAMP WHERE `id` = ? AND %s AND `paid` = 0'):format(ownerCondition),
-            updateParameters
+            'UPDATE `user_bailbonds` SET `paid` = 1, `paid_at` = CURRENT_TIMESTAMP WHERE `id` = ? AND `paid` = 0',
+            { id }
         )
         if tonumber(updated) ~= 1 then
             return 'unavailable'
@@ -298,7 +315,7 @@ RegisterNetEvent('DE_bailbonds:payBond', function(bondId)
                 print(('[DE_bailbonds] Society account %s is unavailable for bond %s'):format(Config.SocietyAccount, id))
             end
         end)
-        logAction('paid', xPlayer.identifier, xPlayer.identifier, ('bond_id=%s amount=%d'):format(id, price))
+        logAction('paid', xPlayer.identifier, bond.name, ('bond_id=%s amount=%d'):format(id, price))
         return ('paid:%s:%d'):format(bond.name, price)
     end)
 

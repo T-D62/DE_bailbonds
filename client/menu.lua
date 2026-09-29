@@ -1,7 +1,7 @@
 local menuOpen = false
 
 local function loadBonds()
-    ESX.TriggerServerCallback('DE_bailbonds:getBonds', function(bonds)
+    ESX.TriggerServerCallback('DE_bailbonds:getMenuBonds', function(bonds)
         SendNUIMessage({
             action = 'setBonds',
             bonds = bonds or {},

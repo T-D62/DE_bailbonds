@@ -37,7 +37,7 @@ function render() {
         empty.className = 'empty';
         empty.textContent = currentView === 'paid'
             ? 'No paid bonds to display.'
-            : 'You have no outstanding bonds.';
+            : 'There are no outstanding bonds to pay.';
         bondList.append(empty);
         return;
     }
@@ -140,7 +140,7 @@ window.addEventListener('message', event => {
     } else if (message.action === 'paymentResult') {
         paymentPending = false;
         const messages = {
-            success: 'Payment complete. Your bond list has been updated.',
+            success: 'Payment complete. The bond list has been updated.',
             insufficient: 'You do not have enough money to pay this bond.',
             unavailable: 'This bond is no longer available to pay.',
             failure: 'Payment failed. Please try again later.',
