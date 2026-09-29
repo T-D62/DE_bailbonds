@@ -250,11 +250,13 @@ RegisterNetEvent('DE_bailbonds:payBond', function(bondId)
     local id = tonumber(bondId)
     if not xPlayer or not id or id < 1 or id % 1 ~= 0 then
         notify(source, 'error', 'Invalid bond selection.')
+        TriggerClientEvent('DE_bailbonds:paymentResult', source, 'failure')
         return
     end
 
     if paymentsInProgress[id] then
         notify(source, 'error', 'This bond payment is already being processed.')
+        TriggerClientEvent('DE_bailbonds:paymentResult', source, 'unavailable')
         return
     end
     paymentsInProgress[id] = true
@@ -304,13 +306,17 @@ RegisterNetEvent('DE_bailbonds:payBond', function(bondId)
     if not ok then
         notify(source, 'error', 'The payment could not be processed. Please contact an administrator.')
         print(('[DE_bailbonds] Payment failed for bond %s: %s'):format(id, tostring(result)))
+        TriggerClientEvent('DE_bailbonds:paymentResult', source, 'failure')
     elseif result == 'unavailable' then
         notify(source, 'error', 'This bond is no longer available to pay.')
+        TriggerClientEvent('DE_bailbonds:paymentResult', source, 'unavailable')
     elseif result == 'insufficient' then
         notify(source, 'error', 'You do not have enough money to pay this bond.')
+        TriggerClientEvent('DE_bailbonds:paymentResult', source, 'insufficient')
     else
         local name, price = result:match('^paid:(.*):(%d+)$')
         notify(source, 'success', ('You paid %s’s bond of $%s.'):format(name or 'the player', price or '0'))
+        TriggerClientEvent('DE_bailbonds:paymentResult', source, 'success')
     end
 end)
 

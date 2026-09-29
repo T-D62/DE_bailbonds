@@ -68,7 +68,7 @@ Officers receive confirmation or validation errors in-game. Set, status-check, r
 
 ## Player payments
 
-Players can use the NPC menu or `/bondstatus` to check their balance. Unpaid debts are notified after spawn and reminded at the configured interval. Selecting an unpaid bond opens a confirmation dialog. The server looks up the bond by its database ID and the player's ESX identifier before processing payment; client-supplied prices and names are never used to charge money.
+Players can interact with the bail-bonds NPC to open the NUI dashboard, which shows unpaid bonds, paid history, the outstanding total, and a payment confirmation. Unpaid debts are notified after spawn and reminded at the configured interval; `/bondstatus` remains available. The server looks up the bond by its database ID and the player's ESX identifier before processing payment; client-supplied prices and names are never used to charge money.
 
 ## Database tracking
 
