@@ -21,7 +21,7 @@ NearPed = function(model, coords)
             label = 'View Bonds',
             icon = 'fas fa-handcuffs',
             onSelect = function(data)
-                lib.showMenu('bailbonds_menu')
+                TriggerEvent('DE_bailbonds:openMenu')
             end,
         },
     })
