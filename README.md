@@ -10,7 +10,6 @@ A bail bond resource for FiveM servers running ESX, ox_lib, oxmysql, ox_target, 
 - `ox_target`
 - `esx_addonaccount` with the configured society account
 - `okokNotify`
-- The `ReaperV4` resource referenced by this resource's `fxmanifest.lua`
 
 ## Installation
 
